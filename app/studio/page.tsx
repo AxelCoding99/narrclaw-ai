@@ -10,7 +10,7 @@ import {
   Sparkles,
   Wand2,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 type NarrativeItem = {
@@ -198,7 +198,7 @@ function buildDefaultPrompt(mode: StudioMode, topic: string, audience: string) {
   return `Write a clean X thread about why ${cleanTopic} is moving right now, what is likely driving the move, and what users should watch next. Keep it specific, natural, and easy to follow for ${audience}.`;
 }
 
-export default function StudioPage() {
+function StudioPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -616,5 +616,26 @@ export default function StudioPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+function StudioPageFallback() {
+  return (
+    <main className="min-h-screen bg-background text-foreground">
+      <Navbar />
+      <section className="mx-auto max-w-6xl px-6 pb-16 pt-28 md:pt-32">
+        <div className="rounded-[28px] border border-border bg-card/90 p-6 text-sm text-muted-foreground">
+          Loading studio...
+        </div>
+      </section>
+    </main>
+  );
+}
+
+export default function StudioPage() {
+  return (
+    <Suspense fallback={<StudioPageFallback />}>
+      <StudioPageContent />
+    </Suspense>
   );
 }

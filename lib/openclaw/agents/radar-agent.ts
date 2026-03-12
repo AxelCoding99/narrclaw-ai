@@ -1,25 +1,15 @@
-import { getRadarData } from "../../utils";
+import { getRadarData } from "../utils";
 
-export async function radarAgent(args:any) {
-
-  const data = await getRadarData();
-
-  const narrative = args.narrative?.toLowerCase();
-
-  const found = data.narratives.find(
-    (n:any) => n.key.toLowerCase() === narrative
-  );
-
-  if (!found) {
-    return {
-      error: "Narrative not found"
-    };
-  }
+export async function runRadarAgent() {
+  const radarData = await getRadarData();
+  const narratives = radarData.narratives ?? [];
+  const topNarrative = narratives[0] || null;
 
   return {
-    narrative: found.key,
-    momentum: found.avg_change_24h,
-    confidence: found.confidence,
-    coins: found.coins
+    ok: true,
+    updatedAt: radarData.updatedAt,
+    source: radarData.source ?? "fallback",
+    narratives,
+    topNarrative,
   };
 }
