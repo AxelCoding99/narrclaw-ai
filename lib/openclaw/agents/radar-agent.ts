@@ -7,8 +7,8 @@ export async function runRadarAgent() {
 
   return {
     ok: true,
-    updatedAt: radarData.updatedAt,
-    source: radarData.source ?? "fallback",
+    updatedAt: radarData.updatedAt ?? new Date().toISOString(),
+    source: radarData.source ?? "live",
     narratives,
     topNarrative,
   };

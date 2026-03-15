@@ -548,9 +548,9 @@ export default function ConsoleClient() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            message: clean,
-            sessionId: sessionIdRef.current,
-          }),
+  command: clean,
+  sessionId: sessionIdRef.current,
+})
         });
 
         const rawText = await res.text();
@@ -855,9 +855,9 @@ export default function ConsoleClient() {
                           Ask anything naturally
                         </div>
                         <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                          Tanya apapun. OpenClaw akan menjaga konteks percakapan
-                          supaya follow-up seperti “turn this into a post” atau
-                          “simplify this” tetap nyambung ke topik sebelumnya.
+                          Ask anything. OpenClaw keeps track of the conversation so follow-ups
+  like “turn this into a post” or “simplify this” still stay connected
+  to the previous topic.
                         </p>
                       </div>
                     </div>

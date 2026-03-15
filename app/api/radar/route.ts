@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3";
 
 type NarrativeKey =
@@ -158,7 +161,9 @@ function buildNarrativesFromAssets(assets: RadarAsset[]): NarrativeOutput[] {
     .map((group) => {
       const validChanges = group.assets
         .map((asset) => asset.change_24h)
-        .filter((value): value is number => value !== null && !Number.isNaN(value));
+        .filter(
+          (value): value is number => value !== null && !Number.isNaN(value)
+        );
 
       const avg =
         validChanges.length > 0
@@ -336,7 +341,7 @@ async function fetchMarketData(): Promise<MarketCoin[]> {
     const res = await fetch(
       `${COINGECKO_BASE_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h`,
       {
-        next: { revalidate: 120 },
+        cache: "no-store",
         headers: {
           accept: "application/json",
         },
@@ -392,25 +397,47 @@ export async function GET() {
 
     const narratives = buildNarrativesFromAssets(assets);
 
-    return NextResponse.json({
-      updatedAt: new Date().toISOString(),
-      source,
-      warning,
-      assets,
-      narratives,
-    });
+    return NextResponse.json(
+      {
+        updatedAt: new Date().toISOString(),
+        source,
+        warning,
+        assets,
+        narratives,
+      },
+      {
+        headers: {
+          "Cache-Control":
+            "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+          Pragma: "no-cache",
+          Expires: "0",
+          "Surrogate-Control": "no-store",
+        },
+      }
+    );
   } catch (error) {
     console.error("RADAR_API_ERROR", error);
 
     const fallbackAssets = buildFallbackAssets();
     const narratives = buildNarrativesFromAssets(fallbackAssets);
 
-    return NextResponse.json({
-      updatedAt: new Date().toISOString(),
-      source: "fallback",
-      warning: "Radar recovered with fallback data after unexpected error.",
-      assets: fallbackAssets,
-      narratives,
-    });
+    return NextResponse.json(
+      {
+        updatedAt: new Date().toISOString(),
+        source: "fallback",
+        warning: "Radar recovered with fallback data after unexpected error.",
+        assets: fallbackAssets,
+        narratives,
+      },
+      {
+        headers: {
+          "Cache-Control":
+            "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+          Pragma: "no-cache",
+          Expires: "0",
+          "Surrogate-Control": "no-store",
+        },
+      }
+    );
   }
 }

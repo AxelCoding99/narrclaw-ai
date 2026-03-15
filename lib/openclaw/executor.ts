@@ -1,4 +1,14 @@
-import { route, type OpenClawRoute } from "./router";
+import { routeCommand, type OpenClawRoute } from "./router";
+
+type NarrativeItem = {
+  key: string;
+  coins: string[];
+  asset_count: number;
+  avg_change_24h: number | null;
+  confidence: number;
+  status: string;
+  lead_asset: string;
+};
 
 type NarrativeItem = {
   key: string;
@@ -53,12 +63,21 @@ function normalizeTopic(input?: string) {
   if (lower === "rwa") return "RWA";
   if (lower === "depin") return "DePIN";
   if (lower === "defi") return "DeFi";
-  if (lower === "layer 1" || lower === "layer1" || lower === "l1") return "Layer 1";
-  if (lower === "layer 2" || lower === "layer2" || lower === "l2") return "Layer 2";
+  if (lower === "layer 1" || lower === "layer1" || lower === "l1")
+    return "Layer 1";
+  if (lower === "layer 2" || lower === "layer2" || lower === "l2")
+    return "Layer 2";
   if (lower === "infra" || lower === "infrastructure") return "Infrastructure";
-  if (lower === "meme" || lower === "memes" || lower === "memecoin" || lower === "memecoins") return "Memes";
+  if (
+    lower === "meme" ||
+    lower === "memes" ||
+    lower === "memecoin" ||
+    lower === "memecoins"
+  )
+    return "Memes";
   if (lower === "gaming" || lower === "gamefi") return "Gaming";
-  if (lower === "stablecoin" || lower === "stablecoins") return "Stablecoin Infrastructure";
+  if (lower === "stablecoin" || lower === "stablecoins")
+    return "Stablecoin Infrastructure";
 
   return value;
 }
@@ -91,7 +110,11 @@ function buildResult(
 
 function getBaseUrl() {
   if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL;
+    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
+  }
+
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
   }
 
   if (process.env.VERCEL_URL) {
@@ -101,12 +124,17 @@ function getBaseUrl() {
   return "http://localhost:3000";
 }
 
-async function getRadarData() {
+async function getRadarData(): Promise<RadarResponse> {
   const baseUrl = getBaseUrl();
+  const url = `${baseUrl}/api/radar?ts=${Date.now()}`;
 
   try {
-    const res = await fetch(`${baseUrl}/api/radar`, {
+    const res = await fetch(url, {
       cache: "no-store",
+      headers: {
+        "Cache-Control": "no-store, no-cache, max-age=0",
+        Pragma: "no-cache",
+      },
     });
 
     if (!res.ok) {
@@ -120,10 +148,12 @@ async function getRadarData() {
     }
 
     return radarData;
-  } catch {
+  } catch (error) {
+    console.error("OPENCLAW_RADAR_FETCH_FAILED", error);
+
     return {
       updatedAt: new Date().toISOString(),
-      source: "fallback" as const,
+      source: "fallback",
       warning: "Radar live data unavailable, using local fallback.",
       narratives: [
         {
@@ -328,13 +358,22 @@ function buildLearningResult(
     if (lower.includes(" rwa ")) return "RWA";
     if (lower.includes(" depin ")) return "DePIN";
     if (lower.includes(" defi ")) return "DeFi";
-    if (lower.includes(" layer 1 ") || lower.includes(" layer1 ") || lower.includes(" l1 ")) {
+    if (
+      lower.includes(" layer 1 ") ||
+      lower.includes(" layer1 ") ||
+      lower.includes(" l1 ")
+    ) {
       return "Layer 1";
     }
-    if (lower.includes(" layer 2 ") || lower.includes(" layer2 ") || lower.includes(" l2 ")) {
+    if (
+      lower.includes(" layer 2 ") ||
+      lower.includes(" layer2 ") ||
+      lower.includes(" l2 ")
+    ) {
       return "Layer 2";
     }
-    if (lower.includes(" gaming ") || lower.includes(" gamefi ")) return "Gaming";
+    if (lower.includes(" gaming ") || lower.includes(" gamefi "))
+      return "Gaming";
     if (
       lower.includes(" meme ") ||
       lower.includes(" memes ") ||
@@ -377,7 +416,8 @@ function buildLearningResult(
           "AI is better confirmed when leadership stays strong, participation broadens across multiple names, and the move is not dependent on one isolated coin.",
         weakens:
           "The narrative weakens when breadth shrinks, leaders roll over, or the category becomes visible without enough follow-through.",
-        representedBy: "TAO, FET, RNDR, NEAR, and other AI-linked infrastructure or application names depending on cycle context.",
+        representedBy:
+          "TAO, FET, RNDR, NEAR, and other AI-linked infrastructure or application names depending on cycle context.",
         watchNext:
           "Watch whether leadership stays broad, whether infrastructure names keep confirming the move, and whether the category still absorbs capital instead of losing it to competing narratives.",
       };
@@ -403,7 +443,8 @@ function buildLearningResult(
           "RWA is better confirmed when the market keeps rewarding the category broadly and the story continues to feel structurally credible rather than promotional.",
         weakens:
           "The narrative weakens when the market stops treating the category as a real bridge to traditional finance and starts seeing it as branding without strong follow-through.",
-        representedBy: "ONDO and other tokenization-linked or institution-facing crypto names depending on the current cycle.",
+        representedBy:
+          "ONDO and other tokenization-linked or institution-facing crypto names depending on the current cycle.",
         watchNext:
           "Watch whether the market still values institutional framing, whether participation broadens, and whether the narrative keeps enough credibility to matter.",
       };
@@ -429,7 +470,8 @@ function buildLearningResult(
           "DePIN is better confirmed when the infrastructure angle remains believable and more than one name begins participating in the move.",
         weakens:
           "The narrative weakens when users stop believing the infrastructure story is scaling or when market conviction fades too quickly.",
-        representedBy: "AKT, HNT, and other infrastructure-linked names depending on the cycle.",
+        representedBy:
+          "AKT, HNT, and other infrastructure-linked names depending on the cycle.",
         watchNext:
           "Watch whether the infrastructure angle stays credible, whether participation broadens, and whether the narrative remains strong enough to avoid fading into the background.",
       };
@@ -455,7 +497,8 @@ function buildLearningResult(
           "DeFi is better confirmed when multiple protocols participate and the market keeps rewarding the category beyond one leader.",
         weakens:
           "The narrative weakens when breadth is poor and the move starts looking more isolated than structural.",
-        representedBy: "UNI, AAVE, and other protocol or liquidity-linked names depending on market context.",
+        representedBy:
+          "UNI, AAVE, and other protocol or liquidity-linked names depending on market context.",
         watchNext:
           "Watch protocol breadth, capital flow, and whether the market continues treating DeFi as a sector-wide story instead of a few isolated moves.",
       };
@@ -481,7 +524,8 @@ function buildLearningResult(
           "Layer 1 is better confirmed when leadership stays credible and multiple ecosystems or related assets begin participating in the move.",
         weakens:
           "The narrative weakens when the move becomes too narrow and the market stops rewarding the category as a broader sector story.",
-        representedBy: "BTC, ETH, SOL, and other base-chain leaders depending on the cycle.",
+        representedBy:
+          "BTC, ETH, SOL, and other base-chain leaders depending on the cycle.",
         watchNext:
           "Watch developer pull, ecosystem breadth, and whether capital continues rewarding core infrastructure rather than rotating away.",
       };
@@ -507,7 +551,8 @@ function buildLearningResult(
           "Layer 2 is better confirmed when ecosystem activity, user adoption, and liquidity support the story beyond branding alone.",
         weakens:
           "The narrative weakens when adoption fails to support the market story and the category loses credibility.",
-        representedBy: "Major Ethereum scaling ecosystems and other L2-linked assets depending on context.",
+        representedBy:
+          "Major Ethereum scaling ecosystems and other L2-linked assets depending on context.",
         watchNext:
           "Watch ecosystem usage, liquidity, and whether the market continues rewarding scalability narratives in a broad way.",
       };
@@ -533,7 +578,8 @@ function buildLearningResult(
           "Gaming is better confirmed when the category shows believable ecosystem activity and not just brief excitement.",
         weakens:
           "The narrative weakens when it becomes too dependent on imagination without enough follow-through.",
-        representedBy: "Game-linked ecosystems and gaming-associated tokens depending on cycle context.",
+        representedBy:
+          "Game-linked ecosystems and gaming-associated tokens depending on cycle context.",
         watchNext:
           "Watch whether user attention turns into believable ecosystem traction and whether the category remains relevant beyond a short thematic bounce.",
       };
@@ -559,7 +605,8 @@ function buildLearningResult(
           "Memes are better confirmed when the move is broad enough to represent a real attention wave instead of one isolated pump.",
         weakens:
           "The narrative weakens when momentum fades quickly and attention stops spreading across the category.",
-        representedBy: "DOGE and other meme-linked leaders depending on the cycle.",
+        representedBy:
+          "DOGE and other meme-linked leaders depending on the cycle.",
         watchNext:
           "Watch whether the move remains broad, whether attention is still accelerating, and whether the category is getting crowded too fast.",
       };
@@ -585,7 +632,8 @@ function buildLearningResult(
           "The theme is better confirmed when users recognize its structural importance and the market rewards related infrastructure more clearly.",
         weakens:
           "The theme weakens when the market values visibility over plumbing and rotates away from foundational narratives.",
-        representedBy: "Liquidity rails, settlement layers, and ecosystem infrastructure tied to stable-value capital movement.",
+        representedBy:
+          "Liquidity rails, settlement layers, and ecosystem infrastructure tied to stable-value capital movement.",
         watchNext:
           "Watch whether the market starts prioritizing structural utility again and whether stablecoin-linked rails gain more strategic attention.",
       };
@@ -611,7 +659,8 @@ function buildLearningResult(
           "Infrastructure is better confirmed when ecosystem importance, usage, and capital relevance align in a believable way.",
         weakens:
           "The narrative weakens when the market stops prioritizing foundational utility and rotates toward simpler attention trades.",
-        representedBy: "Networks, tooling, coordination layers, and backend crypto rails depending on current market context.",
+        representedBy:
+          "Networks, tooling, coordination layers, and backend crypto rails depending on current market context.",
         watchNext:
           "Watch whether the market continues valuing foundational exposure and whether infrastructure names regain broader strategic relevance.",
       };
@@ -754,7 +803,11 @@ function buildLearningResult(
       return "beginner";
     }
 
-    if (p.includes("why does it matter now") || p.includes("matter now") || p.includes("relevant now")) {
+    if (
+      p.includes("why does it matter now") ||
+      p.includes("matter now") ||
+      p.includes("relevant now")
+    ) {
       return "why-now";
     }
 
@@ -766,7 +819,8 @@ function buildLearningResult(
 
   if (questionType === "radar") {
     const sorted = [...narratives].sort(
-      (a, b) => getMomentumScore(b.avg_change_24h) - getMomentumScore(a.avg_change_24h)
+      (a, b) =>
+        getMomentumScore(b.avg_change_24h) - getMomentumScore(a.avg_change_24h)
     );
     const top = sorted[0];
     const second = sorted[1];
@@ -1235,7 +1289,9 @@ function buildStudioResult(
   }
 
   const cleanTopic = sanitizeTopic(topic);
-  const prompt = (studioPrompt || `Write about ${cleanTopic}`).trim().toLowerCase();
+  const prompt = (studioPrompt || `Write about ${cleanTopic}`)
+    .trim()
+    .toLowerCase();
 
   function coreFor(inputTopic: string) {
     const t = sanitizeTopic(inputTopic);
@@ -1355,14 +1411,10 @@ function buildStudioResult(
 
     return {
       subject: t,
-      whyUp:
-        `${t} is gaining attention because the market is starting to treat the theme as more than a passing idea and is giving it more narrative relevance right now.`,
-      whyDown:
-        `${t} appears to be weakening because the market is no longer rewarding the theme as cleanly, and attention may be fading or rotating elsewhere.`,
-      quality:
-        `${t} matters when capital, narrative clarity, and believable follow-through begin aligning around it in a way users can actually interpret.`,
-      implication:
-        `the real question is not only whether ${t} is active, but whether the narrative is strong enough to matter beyond a short burst of attention.`,
+      whyUp: `${t} is gaining attention because the market is starting to treat the theme as more than a passing idea and is giving it more narrative relevance right now.`,
+      whyDown: `${t} appears to be weakening because the market is no longer rewarding the theme as cleanly, and attention may be fading or rotating elsewhere.`,
+      quality: `${t} matters when capital, narrative clarity, and believable follow-through begin aligning around it in a way users can actually interpret.`,
+      implication: `the real question is not only whether ${t} is active, but whether the narrative is strong enough to matter beyond a short burst of attention.`,
     };
   }
 
@@ -1398,7 +1450,9 @@ function buildStudioResult(
         return {
           headline: `Headline: ${core.subject} explained simply.`,
           p1: `Paragraph 1: ${core.subject} is a crypto market theme that people are paying attention to right now.`,
-          p2: `Paragraph 2: The simple reason it matters is that ${down ? core.whyDown : core.whyUp}.`,
+          p2: `Paragraph 2: The simple reason it matters is that ${
+            down ? core.whyDown : core.whyUp
+          }.`,
           p3: `Paragraph 3: What matters most is whether the story keeps making sense as more people watch it.`,
         };
       }
@@ -1407,7 +1461,9 @@ function buildStudioResult(
         return {
           headline: `Headline: What ${core.subject} means in simple language.`,
           p1: `Paragraph 1: ${core.subject} is important when the market starts caring about that theme more than before.`,
-          p2: `Paragraph 2: Right now the main reason is that ${down ? core.whyDown : core.whyUp}.`,
+          p2: `Paragraph 2: Right now the main reason is that ${
+            down ? core.whyDown : core.whyUp
+          }.`,
           p3: `Paragraph 3: The easiest thing to watch is whether the move stays broad and believable instead of fading quickly.`,
         };
       }
@@ -1416,7 +1472,9 @@ function buildStudioResult(
         return {
           headline: `Headline: A beginner explanation of ${core.subject}.`,
           p1: `Paragraph 1: ${core.subject} is not just a label. It is a market story that people are reacting to right now.`,
-          p2: `Paragraph 2: The reason for that is ${down ? core.whyDown : core.whyUp}.`,
+          p2: `Paragraph 2: The reason for that is ${
+            down ? core.whyDown : core.whyUp
+          }.`,
           p3: `Paragraph 3: A strong narrative usually keeps attention for longer, while a weak one fades fast.`,
         };
       }
@@ -1424,7 +1482,9 @@ function buildStudioResult(
       return {
         headline: `Headline: Why people are talking about ${core.subject}.`,
         p1: `Paragraph 1: ${core.subject} is in focus because the market sees it as important right now.`,
-        p2: `Paragraph 2: The reason is ${down ? core.whyDown : core.whyUp}.`,
+        p2: `Paragraph 2: The reason is ${
+          down ? core.whyDown : core.whyUp
+        }.`,
         p3: `Paragraph 3: The real question is whether that attention lasts or disappears quickly.`,
       };
     }
@@ -1432,7 +1492,11 @@ function buildStudioResult(
     if (variant === 0) {
       return {
         headline: `Headline: Why ${core.subject} is moving right now.`,
-        p1: `Paragraph 1: ${down ? `${core.subject} is under pressure right now because ${core.whyDown}.` : `${core.subject} is gaining traction right now because ${core.whyUp}.`}`,
+        p1: `Paragraph 1: ${
+          down
+            ? `${core.subject} is under pressure right now because ${core.whyDown}.`
+            : `${core.subject} is gaining traction right now because ${core.whyUp}.`
+        }`,
         p2: `Paragraph 2: What makes the narrative more important than a simple price move is that ${core.quality}.`,
         p3: `Paragraph 3: ${core.implication}`,
       };
@@ -1441,7 +1505,11 @@ function buildStudioResult(
     if (variant === 1) {
       return {
         headline: `Headline: What is likely driving the current ${core.subject} move.`,
-        p1: `Paragraph 1: ${down ? `The current weakness in ${core.subject} looks tied to the fact that ${core.whyDown}.` : `The current strength in ${core.subject} looks tied to the fact that ${core.whyUp}.`}`,
+        p1: `Paragraph 1: ${
+          down
+            ? `The current weakness in ${core.subject} looks tied to the fact that ${core.whyDown}.`
+            : `The current strength in ${core.subject} looks tied to the fact that ${core.whyUp}.`
+        }`,
         p2: `Paragraph 2: That matters because ${core.quality}.`,
         p3: `Paragraph 3: The next important question is whether the narrative keeps enough quality and breadth to remain relevant from here.`,
       };
@@ -1450,15 +1518,25 @@ function buildStudioResult(
     if (variant === 2) {
       return {
         headline: `Headline: ${core.subject} is active again, but the quality of the move matters more than the label.`,
-        p1: `Paragraph 1: ${down ? `${core.subject} may be weakening now, but the more useful question is what has changed inside the narrative structure.` : `${core.subject} may be strengthening now, but the more useful question is what is actually supporting the move beneath the surface.`}`,
-        p2: `Paragraph 2: ${down ? core.whyDown : core.whyUp}. At the same time, ${core.quality}.`,
+        p1: `Paragraph 1: ${
+          down
+            ? `${core.subject} may be weakening now, but the more useful question is what has changed inside the narrative structure.`
+            : `${core.subject} may be strengthening now, but the more useful question is what is actually supporting the move beneath the surface.`
+        }`,
+        p2: `Paragraph 2: ${
+          down ? core.whyDown : core.whyUp
+        }. At the same time, ${core.quality}.`,
         p3: `Paragraph 3: ${core.implication}`,
       };
     }
 
     return {
       headline: `Headline: The market is treating ${core.subject} as more than background noise right now.`,
-      p1: `Paragraph 1: ${down ? `${core.subject} is slipping because ${core.whyDown}.` : `${core.subject} is attracting stronger attention because ${core.whyUp}.`}`,
+      p1: `Paragraph 1: ${
+        down
+          ? `${core.subject} is slipping because ${core.whyDown}.`
+          : `${core.subject} is attracting stronger attention because ${core.whyUp}.`
+      }`,
       p2: `Paragraph 2: ${core.quality}. That is why the move should be judged through narrative strength, not just price alone.`,
       p3: `Paragraph 3: ${core.implication}`,
     };
@@ -1521,7 +1599,7 @@ export async function execute(
     studioTopic?: string;
   }
 ): Promise<OpenClawExecutionResult> {
-  const routed = preRouted ?? route({ command });
+  const routed = preRouted ?? routeCommand({ command });
 
   try {
     const radarData = await getRadarData();

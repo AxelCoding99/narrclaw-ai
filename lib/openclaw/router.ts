@@ -525,7 +525,7 @@ function buildFollowupRoute(
   return null;
 }
 
-export function route(request: OpenClawRequest): OpenClawRoute {
+export function routeCommand(request: OpenClawRequest): OpenClawRoute {
   const raw = request.command.trim();
   const cmd = raw.toLowerCase();
   const context = request.context;
