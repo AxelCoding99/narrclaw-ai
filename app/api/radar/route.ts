@@ -23,10 +23,18 @@ const COIN_NARRATIVE_MAP: Record<string, NarrativeKey> = {
   sol: "Layer 1",
   sui: "Layer 1",
   apt: "Layer 1",
+  avax: "Layer 1",
+  atom: "Layer 1",
+  inj: "Layer 1",
+  sei: "Layer 1",
+  tia: "Layer 1",
 
   arb: "Layer 2",
   op: "Layer 2",
   manta: "Layer 2",
+  matic: "Layer 2",
+  metis: "Layer 2",
+  imx: "Layer 2",
 
   tao: "AI",
   fet: "AI",
@@ -34,31 +42,46 @@ const COIN_NARRATIVE_MAP: Record<string, NarrativeKey> = {
   rndr: "AI",
   agix: "AI",
   near: "AI",
+  arkm: "AI",
+  nmr: "AI",
+  phb: "AI",
 
   ondo: "RWA",
   cfg: "RWA",
   polyx: "RWA",
+  tru: "RWA",
+  link: "RWA",
 
   hnt: "DePIN",
   akt: "DePIN",
   iotx: "DePIN",
+  mobile: "DePIN",
 
   ar: "Infrastructure",
   fil: "Infrastructure",
+  storj: "Infrastructure",
+  ankr: "Infrastructure",
+  grt: "Infrastructure",
 
   aave: "DeFi",
   uni: "DeFi",
   dydx: "DeFi",
   pendle: "DeFi",
+  crv: "DeFi",
+  comp: "DeFi",
+  snx: "DeFi",
 
-  imx: "Gaming",
   gala: "Gaming",
   beam: "Gaming",
+  pixel: "Gaming",
+  super: "Gaming",
 
   pepe: "Memes",
   doge: "Memes",
   bonk: "Memes",
   wif: "Memes",
+  shib: "Memes",
+  floki: "Memes",
 };
 
 type MarketCoin = {
@@ -333,25 +356,39 @@ function buildFallbackAssets(): RadarAsset[] {
 
 async function fetchMarketData(): Promise<MarketCoin[]> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000);
+  const timeout = setTimeout(() => controller.abort(), 12000);
 
   try {
-    const res = await fetch(
-      `${COINGECKO_BASE_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h`,
-      {
-        cache: "no-store",
-        headers: {
-          accept: "application/json",
-        },
-        signal: controller.signal,
-      }
+    const pages = [1, 2, 3];
+
+    const results = await Promise.all(
+      pages.map(async (page) => {
+        const res = await fetch(
+          `${COINGECKO_BASE_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=${page}&sparkline=false&price_change_percentage=24h`,
+          {
+            cache: "no-store",
+            headers: {
+              accept: "application/json",
+            },
+            signal: controller.signal,
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error(`CoinGecko returned status ${res.status} on page ${page}`);
+        }
+
+        return (await res.json()) as MarketCoin[];
+      })
     );
 
-    if (!res.ok) {
-      throw new Error(`CoinGecko returned status ${res.status}`);
-    }
+    const merged = results.flat();
 
-    return await res.json();
+    const unique = Array.from(
+      new Map(merged.map((coin) => [coin.id, coin])).values()
+    );
+
+    return unique;
   } finally {
     clearTimeout(timeout);
   }
