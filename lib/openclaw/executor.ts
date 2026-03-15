@@ -10,16 +10,6 @@ type NarrativeItem = {
   lead_asset: string;
 };
 
-type NarrativeItem = {
-  key: string;
-  coins: string[];
-  asset_count: number;
-  avg_change_24h: number | null;
-  confidence: number;
-  status: string;
-  lead_asset: string;
-};
-
 type RadarResponse = {
   updatedAt: string;
   assets?: unknown[];

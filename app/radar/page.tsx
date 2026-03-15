@@ -63,15 +63,29 @@ function getMomentumTone(value: number | null) {
 function getStatusTone(status: string) {
   const value = status.toLowerCase();
 
-  if (value.includes("strong") || value.includes("hot") || value.includes("bull")) {
+  if (
+    value.includes("strong") ||
+    value.includes("hot") ||
+    value.includes("bull")
+  ) {
     return "border-primary/25 bg-primary/10 text-primary";
   }
 
-  if (value.includes("watch") || value.includes("build") || value.includes("neutral")) {
+  if (
+    value.includes("watch") ||
+    value.includes("build") ||
+    value.includes("neutral") ||
+    value.includes("stable") ||
+    value.includes("mixed")
+  ) {
     return "border-border bg-background/70 text-muted-foreground";
   }
 
-  if (value.includes("weak") || value.includes("risk") || value.includes("bear")) {
+  if (
+    value.includes("weak") ||
+    value.includes("risk") ||
+    value.includes("bear")
+  ) {
     return "border-red-400/20 bg-red-400/10 text-red-300";
   }
 
@@ -104,9 +118,9 @@ function getRisk(item: NarrativeItem, index: number) {
 
 function getRotationLabel(current?: NarrativeItem, previous?: NarrativeItem) {
   if (!current) return "No clear leader";
-  if (!previous) return `${current.key} is leading attention`;
+  if (!previous) return `${current.key} is currently the dominant market narrative`;
 
-  return `${current.key} is leading, with ${previous.key} as the closest challenger`;
+  return `${current.key} is currently dominant overall, with ${previous.key} as the closest challenger`;
 }
 
 function getUpdatedText(updatedAt?: string) {
@@ -158,7 +172,7 @@ function HeatCard({
 
             {active && (
               <div className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-primary">
-                Leading
+                Dominant
               </div>
             )}
           </div>
@@ -404,12 +418,12 @@ export default function RadarPage() {
 
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl border border-border bg-background/60 p-4">
-                <div className="text-xs text-muted-foreground">Leading</div>
+                <div className="text-xs text-muted-foreground">Dominant</div>
                 <div className="mt-1 font-semibold">{lead?.key ?? "N/A"}</div>
               </div>
 
               <div className="rounded-xl border border-border bg-background/60 p-4">
-                <div className="text-xs text-muted-foreground">Watch</div>
+                <div className="text-xs text-muted-foreground">Momentum leader</div>
                 <div className="mt-1 font-semibold">{second?.key ?? "N/A"}</div>
               </div>
 
@@ -438,7 +452,7 @@ export default function RadarPage() {
           <div className="rounded-[26px] border border-border bg-card/85 p-5">
             <div className="flex items-center justify-between">
               <div className="text-xs uppercase tracking-[0.18em] text-primary">
-                Market Leader
+                Dominant Narrative
               </div>
               <Activity className="h-4 w-4 text-primary" />
             </div>
@@ -448,7 +462,7 @@ export default function RadarPage() {
             </div>
 
             <div className="mt-2 text-sm text-muted-foreground">
-              Momentum {formatPercent(lead?.avg_change_24h ?? null)}
+              Ranked by overall dominance
             </div>
           </div>
 
@@ -512,6 +526,12 @@ export default function RadarPage() {
               <h2 className="mt-2 text-3xl font-semibold">
                 Sector momentum overview
               </h2>
+
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
+                Narratives are ranked by overall dominance, combining momentum
+                and asset breadth. A dominant narrative may not always have the
+                highest short-term momentum.
+              </p>
             </div>
           </div>
 
@@ -538,17 +558,15 @@ export default function RadarPage() {
           <InsightCard
             icon={<Brain className="h-5 w-5" />}
             label="AI Interpretation"
-            title={`Why ${lead?.key ?? "this narrative"} is leading`}
+            title={`Why ${lead?.key ?? "this narrative"} is dominant`}
             description={
               lead
-                ? `${lead.key} is currently leading the radar with ${formatPercent(
-                    lead.avg_change_24h
-                  )} momentum, ${lead.confidence} confidence, and ${lead.asset_count} tracked assets. The move appears ${getBreadth(
-                    lead
-                  ).toLowerCase()} in breadth, led by ${lead.lead_asset}, while the current lifecycle reads as ${getLifecycle(
+                ? `${lead.key} is currently ranked as the dominant narrative based on overall structure, combining momentum, confidence, and breadth across ${lead.asset_count} tracked assets. The lead asset is ${lead.lead_asset}, the current lifecycle reads as ${getLifecycle(
                     lead,
                     0
-                  ).toLowerCase()}.`
+                  ).toLowerCase()}, and the breadth profile is ${getBreadth(
+                    lead
+                  ).toLowerCase()}. This does not always mean it has the highest short-term momentum, but it does mean it is the strongest overall narrative in the current radar structure.`
                 : "No narrative data yet."
             }
           />
@@ -585,7 +603,7 @@ export default function RadarPage() {
                 )}`}
                 className="flex items-center justify-between rounded-xl border border-border bg-background/60 px-4 py-3 text-sm text-muted-foreground transition hover:border-primary/30 hover:text-foreground"
               >
-                Explain leading narrative
+                Explain dominant narrative
                 <ChevronRight className="h-4 w-4" />
               </Link>
 
