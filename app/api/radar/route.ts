@@ -200,10 +200,8 @@ function buildNarrativesFromAssets(assets: RadarAsset[]): NarrativeOutput[] {
       };
     })
     .sort((a, b) => {
-      const aScore = (a.avg_change_24h ?? -999) + a.asset_count * 2;
-      const bScore = (b.avg_change_24h ?? -999) + b.asset_count * 2;
-      return bScore - aScore;
-    });
+  return (b.avg_change_24h ?? -999) - (a.avg_change_24h ?? -999);
+});
 }
 
 function buildFallbackAssets(): RadarAsset[] {

@@ -326,9 +326,17 @@ export default function RadarPage() {
   const assets = data?.assets ?? [];
 
   const lead = narratives[0];
-  const second = narratives[1];
-  const third = narratives[2];
-  const weakest = narratives[narratives.length - 1];
+const second = narratives[1];
+const third = narratives[2];
+const weakest = narratives[narratives.length - 1];
+
+const momentumLeader = useMemo(() => {
+  if (!narratives.length) return undefined;
+
+  return [...narratives].sort(
+    (a, b) => (b.avg_change_24h ?? -999) - (a.avg_change_24h ?? -999)
+  )[0];
+}, [narratives]);
 
   const topNarratives = useMemo(() => narratives.slice(0, 6), [narratives]);
 
@@ -339,7 +347,7 @@ export default function RadarPage() {
     )[0];
   }, [narratives]);
 
-  const rotationSummary = getRotationLabel(lead, second);
+ const rotationSummary = getRotationLabel(lead, momentumLeader);
   const updatedText = getUpdatedText(data?.updatedAt);
 
   return (
@@ -423,9 +431,9 @@ export default function RadarPage() {
               </div>
 
               <div className="rounded-xl border border-border bg-background/60 p-4">
-                <div className="text-xs text-muted-foreground">Momentum leader</div>
-                <div className="mt-1 font-semibold">{second?.key ?? "N/A"}</div>
-              </div>
+  <div className="text-xs text-muted-foreground">Momentum Leader</div>
+  <div className="mt-1 font-semibold">{momentumLeader?.key ?? "N/A"}</div>
+</div>
 
               <div className="rounded-xl border border-border bg-background/60 p-4">
                 <div className="text-xs text-muted-foreground">Weakening</div>
@@ -528,9 +536,9 @@ export default function RadarPage() {
               </h2>
 
               <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
-                Narratives are ranked by overall dominance, combining momentum
-                and asset breadth. A dominant narrative may not always have the
-                highest short-term momentum.
+                arratives are ranked by overall dominance, combining momentum and asset breadth.
+  The dominant narrative is the strongest overall structure, while the momentum leader
+  is the sector with the highest short-term percentage move.
               </p>
             </div>
           </div>
@@ -559,16 +567,11 @@ export default function RadarPage() {
             icon={<Brain className="h-5 w-5" />}
             label="AI Interpretation"
             title={`Why ${lead?.key ?? "this narrative"} is dominant`}
-            description={
-              lead
-                ? `${lead.key} is currently ranked as the dominant narrative based on overall structure, combining momentum, confidence, and breadth across ${lead.asset_count} tracked assets. The lead asset is ${lead.lead_asset}, the current lifecycle reads as ${getLifecycle(
-                    lead,
-                    0
-                  ).toLowerCase()}, and the breadth profile is ${getBreadth(
-                    lead
-                  ).toLowerCase()}. This does not always mean it has the highest short-term momentum, but it does mean it is the strongest overall narrative in the current radar structure.`
-                : "No narrative data yet."
-            }
+           description={
+  lead
+    ? `${lead.key} is currently ranked as the dominant narrative based on overall structure, combining momentum, confidence, and breadth across ${lead.asset_count} tracked assets. Meanwhile, ${momentumLeader?.key ?? "N/A"} is the current momentum leader based on the strongest short-term percentage move. This means the dominant narrative is not always the fastest-moving one, and users should read Radar as structure first, momentum second.`
+    : "No narrative data yet."
+}
           />
 
           <div className="rounded-[32px] border border-border bg-card/85 p-6">
